@@ -7,6 +7,7 @@ import Achievements from '@/components/Achievements';
 import SkillsGraph from '@/components/SkillsGraph';
 import GitHubRepos from '@/components/GitHubRepos';
 import HackathonStats from '@/components/HackathonStats';
+import Contact from '@/components/Contact';
 
 const Index = () => {
   // Lazy load the ThreeJS component for better performance
@@ -48,6 +49,9 @@ const Index = () => {
         
         {/* Hackathon Stats Section */}
         <HackathonStats />
+        
+        {/* Contact Section */}
+        <Contact />
       </main>
       
       {/* Footer */}

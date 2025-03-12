@@ -31,4 +31,17 @@ export interface HackathonResult {
   description: string;
 }
 
+export interface CodingPlatform {
+  name: string;
+  username: string;
+  url: string;
+  stats: Array<{
+    name: string;
+    value: string | number;
+    icon?: JSX.Element;
+  }>;
+  logo: JSX.Element;
+  color: string;
+}
+
 export type Year = 1 | 2 | 3 | 4;

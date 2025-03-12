@@ -33,7 +33,7 @@ const Navbar: React.FC = () => {
         <a href="#" className="text-xl font-bold gradient-text">Portfolio</a>
         
         <nav className="hidden md:flex items-center space-x-8">
-          {["Home", "Achievements", "Skills", "Projects", "Hackathons"].map((item, index) => (
+          {["Home", "Achievements", "Skills", "Projects", "Hackathons", "Contact"].map((item, index) => (
             <a 
               key={index}
               href={`#${item.toLowerCase()}`}
@@ -44,9 +44,12 @@ const Navbar: React.FC = () => {
           ))}
         </nav>
         
-        <button className="hidden md:flex neo-button">
+        <a 
+          href="#contact" 
+          className="hidden md:flex neo-button"
+        >
           Contact
-        </button>
+        </a>
         
         <button 
           className="md:hidden text-white/70 hover:text-white"
@@ -78,7 +81,7 @@ const Navbar: React.FC = () => {
         )}
       >
         <div className="p-6 flex flex-col space-y-4">
-          {["Home", "Achievements", "Skills", "Projects", "Hackathons"].map((item, index) => (
+          {["Home", "Achievements", "Skills", "Projects", "Hackathons", "Contact"].map((item, index) => (
             <a 
               key={index}
               href={`#${item.toLowerCase()}`}
@@ -88,9 +91,13 @@ const Navbar: React.FC = () => {
               {item}
             </a>
           ))}
-          <button className="neo-button mt-4 w-full">
+          <a 
+            href="#contact" 
+            className="neo-button mt-4 w-full text-center"
+            onClick={() => setMobileMenuOpen(false)}
+          >
             Contact
-          </button>
+          </a>
         </div>
       </div>
     </header>
