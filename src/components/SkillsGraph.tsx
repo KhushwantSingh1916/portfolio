@@ -19,15 +19,14 @@ const initialSkills: SkillData[] = [
 
 interface CodingPlatform {
   name: string;
-  username: string;
   url: string;
-  apiEndpoint?: string;
+  username: string;
   stats: Array<{
     name: string;
     value: string | number;
     icon?: JSX.Element;
   }>;
-  logo: JSX.Element | string;
+  logo: React.ReactNode;
   color: string;
 }
 
@@ -582,4 +581,3 @@ const SkillsGraph: React.FC = () => {
 };
 
 export default SkillsGraph;
-
