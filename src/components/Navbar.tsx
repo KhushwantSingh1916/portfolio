@@ -44,13 +44,6 @@ const Navbar: React.FC = () => {
           ))}
         </nav>
         
-        <a 
-          href="#contact" 
-          className="hidden md:flex neo-button"
-        >
-          Contact
-        </a>
-        
         <button 
           className="md:hidden text-white/70 hover:text-white"
           onClick={toggleMobileMenu}
@@ -91,13 +84,6 @@ const Navbar: React.FC = () => {
               {item}
             </a>
           ))}
-          <a 
-            href="#contact" 
-            className="neo-button mt-4 w-full text-center"
-            onClick={() => setMobileMenuOpen(false)}
-          >
-            Contact
-          </a>
         </div>
       </div>
     </header>

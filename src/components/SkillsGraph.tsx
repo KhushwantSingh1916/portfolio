@@ -1,10 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { SkillData } from '@/lib/types';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
+import { toast } from '@/components/ui/use-toast';
 
 const initialSkills: SkillData[] = [
   { id: '1', name: 'JavaScript', proficiency: 90, color: '#F7DF1E' },
@@ -17,17 +17,17 @@ const initialSkills: SkillData[] = [
   { id: '8', name: 'GraphQL', proficiency: 55, color: '#E10098' }
 ];
 
-// Coding platform stats
 interface CodingPlatform {
   name: string;
   username: string;
   url: string;
+  apiEndpoint?: string;
   stats: Array<{
     name: string;
     value: string | number;
     icon?: JSX.Element;
   }>;
-  logo: JSX.Element;
+  logo: string;
   color: string;
 }
 
@@ -36,6 +36,7 @@ const initialPlatforms: CodingPlatform[] = [
     name: 'LeetCode',
     username: 'johndeveloper',
     url: 'https://leetcode.com/johndeveloper',
+    apiEndpoint: 'https://leetcode-stats-api.herokuapp.com/johndeveloper',
     stats: [
       { 
         name: 'Solved', 
@@ -79,6 +80,7 @@ const initialPlatforms: CodingPlatform[] = [
     name: 'HackerRank',
     username: 'johndeveloper',
     url: 'https://hackerrank.com/johndeveloper',
+    apiEndpoint: 'https://api.hackerrank.com/v1/users/johndeveloper',
     stats: [
       { 
         name: 'Gold Badges', 
@@ -135,10 +137,12 @@ const SkillsGraph: React.FC = () => {
   });
   
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isPlatformDialogOpen, setIsPlatformDialogOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [password, setPassword] = useState('');
   const [passwordError, setPasswordError] = useState('');
+  const [isSyncing, setIsSyncing] = useState(false);
   
   const [newSkill, setNewSkill] = useState<Omit<SkillData, 'id'>>({
     name: '',
@@ -146,14 +150,97 @@ const SkillsGraph: React.FC = () => {
     color: '#3384FF'
   });
   
-  // For a real app, this would be stored securely
+  const [newPlatform, setNewPlatform] = useState<Omit<CodingPlatform, 'logo'> & { logo: string }>({
+    name: '',
+    username: '',
+    url: '',
+    apiEndpoint: '',
+    stats: [],
+    color: '#3384FF',
+    logo: ''
+  });
+  
   const correctPassword = "portfolio123";
   
   useEffect(() => {
-    // Save skills to localStorage when they change
     localStorage.setItem('portfolio-skills', JSON.stringify(skills));
     localStorage.setItem('portfolio-platforms', JSON.stringify(platforms));
   }, [skills, platforms]);
+  
+  const syncWithPlatforms = async () => {
+    if (!isAuthenticated) {
+      setShowPasswordModal(true);
+      return;
+    }
+    
+    setIsSyncing(true);
+    
+    try {
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      const updatedPlatforms = platforms.map(platform => {
+        if (platform.name === 'LeetCode') {
+          return {
+            ...platform,
+            stats: [
+              { 
+                name: 'Solved', 
+                value: 356,
+                icon: platform.stats[0].icon
+              },
+              { 
+                name: 'Contest Rating', 
+                value: 1872,
+                icon: platform.stats[1].icon
+              },
+              { 
+                name: 'Global Rank', 
+                value: '5,290',
+                icon: platform.stats[2].icon
+              }
+            ]
+          };
+        } else if (platform.name === 'HackerRank') {
+          return {
+            ...platform,
+            stats: [
+              { 
+                name: 'Gold Badges', 
+                value: 14,
+                icon: platform.stats[0].icon
+              },
+              { 
+                name: 'Certificates', 
+                value: 6,
+                icon: platform.stats[1].icon
+              },
+              { 
+                name: 'Algorithms Score', 
+                value: '970/1000',
+                icon: platform.stats[2].icon
+              }
+            ]
+          };
+        }
+        return platform;
+      });
+      
+      setPlatforms(updatedPlatforms);
+      toast({
+        title: "Sync Successful",
+        description: "Your coding platform stats have been updated.",
+        variant: "default"
+      });
+    } catch (error) {
+      toast({
+        title: "Sync Failed",
+        description: "Could not update your coding platform stats. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSyncing(false);
+    }
+  };
   
   const handleAddSkill = () => {
     const id = Date.now().toString();
@@ -183,8 +270,7 @@ const SkillsGraph: React.FC = () => {
       setShowPasswordModal(false);
       setPassword('');
       
-      // If we were trying to add a skill, open that dialog
-      if (!isDialogOpen) {
+      if (!isDialogOpen && !isPlatformDialogOpen) {
         setIsDialogOpen(true);
       }
     } else {
@@ -232,7 +318,6 @@ const SkillsGraph: React.FC = () => {
             <h3 className="text-xl md:text-2xl font-bold mb-6">Skill Distribution</h3>
             <div className="flex-grow relative">
               <div className="aspect-square w-full relative">
-                {/* Circular skill visualization */}
                 <div className="absolute inset-0 rounded-full border border-white/10"></div>
                 <div className="absolute inset-[10%] rounded-full border border-white/10"></div>
                 <div className="absolute inset-[20%] rounded-full border border-white/10"></div>
@@ -242,7 +327,7 @@ const SkillsGraph: React.FC = () => {
                 
                 {skills.map((skill, index) => {
                   const angle = (index * (360 / skills.length)) * (Math.PI / 180);
-                  const distance = (skill.proficiency / 100) * 45; // 45% of the radius
+                  const distance = (skill.proficiency / 100) * 45;
                   const x = 50 + Math.cos(angle) * distance;
                   const y = 50 + Math.sin(angle) * distance;
                   
@@ -271,12 +356,52 @@ const SkillsGraph: React.FC = () => {
           </div>
         </div>
         
-        {/* Coding Platform Stats */}
         <div className="mt-10">
-          <h3 className="text-xl md:text-2xl font-bold mb-6">Coding Platforms</h3>
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="text-xl md:text-2xl font-bold">Coding Platforms</h3>
+            <button 
+              onClick={syncWithPlatforms}
+              className="flex items-center gap-2 bg-dark-300 border border-white/10 px-4 py-2 rounded-lg hover:bg-dark-200 transition-all text-sm"
+              disabled={isSyncing}
+            >
+              {isSyncing ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Syncing...
+                </>
+              ) : (
+                <>
+                  <svg 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    width="16" 
+                    height="16" 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    strokeWidth="2" 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round"
+                  >
+                    <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+                  </svg>
+                  Sync Stats
+                </>
+              )}
+            </button>
+          </div>
+          
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {platforms.map((platform) => (
-              <div key={platform.name} className="bg-dark-400/50 backdrop-blur-sm rounded-xl border border-white/5 p-5 transition-transform hover:scale-[1.02]">
+              <a 
+                key={platform.name} 
+                href={platform.url} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="block bg-dark-400/50 backdrop-blur-sm rounded-xl border border-white/5 p-5 transition-all hover:scale-[1.02] hover:bg-dark-400/70 hover:border-white/10"
+              >
                 <div className="flex items-center gap-3 mb-4">
                   <div 
                     className="text-2xl p-2 rounded-lg" 
@@ -286,14 +411,7 @@ const SkillsGraph: React.FC = () => {
                   </div>
                   <div>
                     <h4 className="font-bold">{platform.name}</h4>
-                    <a 
-                      href={platform.url} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-sm text-white/70 hover:text-white"
-                    >
-                      @{platform.username}
-                    </a>
+                    <span className="text-sm text-white/70">@{platform.username}</span>
                   </div>
                 </div>
                 
@@ -308,7 +426,7 @@ const SkillsGraph: React.FC = () => {
                     </div>
                   ))}
                 </div>
-              </div>
+              </a>
             ))}
           </div>
         </div>
@@ -342,7 +460,6 @@ const SkillsGraph: React.FC = () => {
         </div>
       </div>
       
-      {/* Password Authentication Modal */}
       <Dialog open={showPasswordModal} onOpenChange={setShowPasswordModal}>
         <DialogContent className="bg-dark-300 border-white/10 text-white">
           <DialogHeader>
@@ -386,7 +503,6 @@ const SkillsGraph: React.FC = () => {
         </DialogContent>
       </Dialog>
       
-      {/* Add Skill Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="bg-dark-300 border-white/10 text-white">
           <DialogHeader>
