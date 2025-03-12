@@ -27,7 +27,7 @@ interface CodingPlatform {
     value: string | number;
     icon?: JSX.Element;
   }>;
-  logo: string;
+  logo: JSX.Element | string;
   color: string;
 }
 
@@ -582,3 +582,4 @@ const SkillsGraph: React.FC = () => {
 };
 
 export default SkillsGraph;
+
