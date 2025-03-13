@@ -72,6 +72,10 @@ const HackathonStats: React.FC = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [hackathonToDelete, setHackathonToDelete] = useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [password, setPassword] = useState('');
+  const [passwordError, setPasswordError] = useState('');
   
   const [newHackathon, setNewHackathon] = useState<Omit<HackathonResult, 'id'>>({
     name: '',
@@ -79,6 +83,8 @@ const HackathonStats: React.FC = () => {
     date: new Date().toISOString().split('T')[0],
     description: ''
   });
+  
+  const correctPassword = "portfolio123";
   
   const handleAddHackathon = () => {
     const id = Date.now().toString();
@@ -98,6 +104,12 @@ const HackathonStats: React.FC = () => {
   };
   
   const handleDeleteHackathon = (id: string) => {
+    if (!isAuthenticated) {
+      setShowPasswordModal(true);
+      setHackathonToDelete(id);
+      return;
+    }
+    
     setHackathonToDelete(id);
     setShowDeleteConfirm(true);
   };
@@ -124,6 +136,24 @@ const HackathonStats: React.FC = () => {
   const handlePositionChange = (value: string) => {
     const position = value === 'null' ? null : parseInt(value) as 1 | 2 | 3;
     setNewHackathon({ ...newHackathon, position });
+  };
+  
+  const handlePasswordSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (password === correctPassword) {
+      setIsAuthenticated(true);
+      setPasswordError('');
+      setShowPasswordModal(false);
+      setPassword('');
+
+      if (hackathonToDelete) {
+        setShowDeleteConfirm(true);
+      } else {
+        setIsDialogOpen(true);
+      }
+    } else {
+      setPasswordError('Incorrect password');
+    }
   };
   
   const totalHackathons = hackathons.length;
@@ -309,7 +339,13 @@ const HackathonStats: React.FC = () => {
         
         <div className="mt-8 flex justify-center">
           <button 
-            onClick={() => setIsDialogOpen(true)}
+            onClick={() => {
+              if (isAuthenticated) {
+                setIsDialogOpen(true);
+              } else {
+                setShowPasswordModal(true);
+              }
+            }}
             className="flex items-center gap-2 bg-dark-300 border border-white/10 px-6 py-3 rounded-lg hover:bg-dark-200 transition-all"
           >
             <svg 
@@ -329,6 +365,49 @@ const HackathonStats: React.FC = () => {
           </button>
         </div>
       </div>
+      
+      <Dialog open={showPasswordModal} onOpenChange={setShowPasswordModal}>
+        <DialogContent className="bg-dark-300 border-white/10 text-white">
+          <DialogHeader>
+            <DialogTitle>Authentication Required</DialogTitle>
+            <DialogDescription className="text-white/70">
+              Enter admin password to add or edit content.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <form onSubmit={handlePasswordSubmit} className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label htmlFor="admin-password" className="text-sm font-medium">Password</label>
+              <Input 
+                id="admin-password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="bg-dark-400 border-white/10"
+                placeholder="Enter admin password"
+              />
+              {passwordError && <p className="text-red-500 text-sm">{passwordError}</p>}
+            </div>
+            
+            <DialogFooter>
+              <Button 
+                variant="outline" 
+                onClick={() => setShowPasswordModal(false)}
+                className="bg-transparent border-white/10 hover:bg-dark-200 text-white"
+                type="button"
+              >
+                Cancel
+              </Button>
+              <Button 
+                type="submit"
+                className="bg-gradient-blue-purple hover:opacity-90 text-white"
+              >
+                Login
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
       
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="bg-dark-300 border-white/10 text-white">

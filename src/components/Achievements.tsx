@@ -257,7 +257,7 @@ const Achievements: React.FC = () => {
                   e.stopPropagation();
                   handleDeleteAchievement(achievement.id);
                 }}
-                className="absolute top-3 right-3 bg-red-500/70 hover:bg-red-500/90 p-2 rounded-full transition-colors"
+                className="absolute top-3 right-3 bg-red-500/70 hover:bg-red-500/90 p-2 rounded-full transition-colors opacity-0 group-hover:opacity-100"
                 aria-label="Delete achievement"
               >
                 <Trash2 size={16} className="text-white" />
