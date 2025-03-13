@@ -71,6 +71,19 @@ const Achievements: React.FC = () => {
     const saved = localStorage.getItem('portfolio-achievements');
     return saved ? JSON.parse(saved) : initialAchievements;
   });
+  
+  const [newAchievement, setNewAchievement] = useState<{
+    title: string;
+    description: string;
+    image: string | File;
+    date: string;
+  }>({
+    title: '',
+    description: '',
+    image: '',
+    date: new Date().toISOString().split('T')[0],
+  });
+  
   const [currentPage, setCurrentPage] = useState(0);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isImageLoaded, setIsImageLoaded] = useState(false);
@@ -518,3 +531,4 @@ const Achievements: React.FC = () => {
 };
 
 export default Achievements;
+
