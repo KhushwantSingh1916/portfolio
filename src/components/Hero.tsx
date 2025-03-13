@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
@@ -20,7 +21,7 @@ const Hero: React.FC = () => {
   // Images state with localStorage persistence
   const [heroImages, setHeroImages] = useState<string[]>(() => {
     const saved = localStorage.getItem('hero-images');
-    return saved ? JSON.parse(savedImages) : [
+    return saved ? JSON.parse(saved) : [
       "https://images.unsplash.com/photo-1568602471122-7832951cc4c5?q=80&w=1000&auto=format&fit=crop",
       "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=1000&auto=format&fit=crop",
       "https://images.unsplash.com/photo-1531297484001-80022131f5a1?q=80&w=1000&auto=format&fit=crop"
