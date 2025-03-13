@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
@@ -39,7 +38,7 @@ const Hero: React.FC = () => {
     const textElement = textRef.current;
     if (!textElement) return;
     
-    const text = textElement.innerText;
+    const text = "John Developer";
     textElement.innerHTML = '';
     
     text.split('').forEach((char, index) => {
@@ -117,9 +116,7 @@ const Hero: React.FC = () => {
           <h1 
             ref={textRef}
             className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight gradient-text"
-          >
-            John Developer
-          </h1>
+          ></h1>
           <div className="h-1 w-24 bg-gradient-blue-purple rounded-full mt-6 animate-fade-in opacity-0" style={{ animationDelay: '1s', animationFillMode: 'forwards' }}></div>
         </div>
         

@@ -2,6 +2,13 @@
 import React, { useState } from 'react';
 import { Repository, Year } from '@/lib/types';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { toast } from '@/components/ui/use-toast';
+import { Trash2, Plus } from 'lucide-react';
 
 const initialRepos: Repository[] = [
   // 1st Year
@@ -78,8 +85,27 @@ const initialRepos: Repository[] = [
 ];
 
 const GitHubRepos: React.FC = () => {
-  const [repos] = useState<Repository[]>(initialRepos);
+  const [repos, setRepos] = useState<Repository[]>(() => {
+    const saved = localStorage.getItem('github-repos');
+    return saved ? JSON.parse(saved) : initialRepos;
+  });
   const [activeYear, setActiveYear] = useState<Year>(1);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [repoToDelete, setRepoToDelete] = useState<string | null>(null);
+  
+  // New repo form state
+  const [newRepo, setNewRepo] = useState<Omit<Repository, 'id'>>({
+    name: '',
+    description: '',
+    url: '',
+    year: 1,
+    language: ''
+  });
+  
+  React.useEffect(() => {
+    localStorage.setItem('github-repos', JSON.stringify(repos));
+  }, [repos]);
   
   const filteredRepos = repos.filter(repo => repo.year === activeYear);
   
@@ -96,6 +122,55 @@ const GitHubRepos: React.FC = () => {
     };
     
     return colors[language] || '#3384FF';
+  };
+  
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setNewRepo({ ...newRepo, [name]: value });
+  };
+  
+  const handleYearChange = (value: string) => {
+    setNewRepo({ ...newRepo, year: parseInt(value) as Year });
+  };
+  
+  const handleAddRepo = () => {
+    const id = Date.now().toString();
+    const updatedRepos = [...repos, { ...newRepo, id }];
+    setRepos(updatedRepos);
+    setIsDialogOpen(false);
+    
+    // Reset form
+    setNewRepo({
+      name: '',
+      description: '',
+      url: '',
+      year: 1,
+      language: ''
+    });
+    
+    toast({
+      title: "Repository Added",
+      description: "Your GitHub repository has been added successfully."
+    });
+  };
+  
+  const handleDeleteRepo = (id: string) => {
+    setRepoToDelete(id);
+    setShowDeleteConfirm(true);
+  };
+  
+  const confirmDeleteRepo = () => {
+    if (repoToDelete) {
+      const updatedRepos = repos.filter(repo => repo.id !== repoToDelete);
+      setRepos(updatedRepos);
+      setShowDeleteConfirm(false);
+      setRepoToDelete(null);
+      
+      toast({
+        title: "Repository Deleted",
+        description: "The GitHub repository has been removed successfully."
+      });
+    }
   };
   
   return (
@@ -124,8 +199,20 @@ const GitHubRepos: React.FC = () => {
                   href={repo.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="glass-card p-6 hover:bg-dark-300/50 transition-all hover:translate-y-[-5px] group"
+                  className="glass-card p-6 hover:bg-dark-300/50 transition-all hover:translate-y-[-5px] group relative"
                 >
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleDeleteRepo(repo.id);
+                    }}
+                    className="absolute top-3 right-3 bg-red-500/20 p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                    aria-label="Delete repository"
+                  >
+                    <Trash2 size={16} className="text-red-300" />
+                  </button>
+                  
                   <div className="flex justify-between items-start mb-4">
                     <div className="flex items-center">
                       <svg 
@@ -178,6 +265,19 @@ const GitHubRepos: React.FC = () => {
                 </a>
               ))}
             </div>
+            
+            <div className="flex justify-center mt-8">
+              <button
+                onClick={() => {
+                  setNewRepo({ ...newRepo, year: year as Year });
+                  setIsDialogOpen(true);
+                }}
+                className="flex items-center gap-2 bg-dark-300 border border-white/10 px-5 py-2 rounded-lg hover:bg-dark-200 transition-all"
+              >
+                <Plus size={18} />
+                Add Year {year} Repository
+              </button>
+            </div>
           </TabsContent>
         ))}
       </Tabs>
@@ -206,6 +306,134 @@ const GitHubRepos: React.FC = () => {
           View All Repositories
         </a>
       </div>
+      
+      {/* Add Repository Dialog */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="bg-dark-300 border-white/10 text-white">
+          <DialogHeader>
+            <DialogTitle>Add GitHub Repository</DialogTitle>
+            <DialogDescription className="text-white/70">
+              Add details about your GitHub repository.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label htmlFor="name" className="text-sm font-medium">Repository Name</label>
+              <Input 
+                id="name"
+                name="name"
+                placeholder="e.g. personal-website"
+                value={newRepo.name}
+                onChange={handleInputChange}
+                className="bg-dark-400 border-white/10"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <label htmlFor="description" className="text-sm font-medium">Description</label>
+              <Textarea 
+                id="description"
+                name="description"
+                placeholder="Describe your repository"
+                value={newRepo.description}
+                onChange={handleInputChange}
+                className="bg-dark-400 border-white/10 min-h-24"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <label htmlFor="url" className="text-sm font-medium">Repository URL</label>
+              <Input 
+                id="url"
+                name="url"
+                placeholder="https://github.com/username/repo-name"
+                value={newRepo.url}
+                onChange={handleInputChange}
+                className="bg-dark-400 border-white/10"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <label htmlFor="year" className="text-sm font-medium">Year</label>
+              <Select
+                value={newRepo.year.toString()}
+                onValueChange={handleYearChange}
+              >
+                <SelectTrigger className="bg-dark-400 border-white/10">
+                  <SelectValue placeholder="Select year" />
+                </SelectTrigger>
+                <SelectContent className="bg-dark-300 border-white/10">
+                  <SelectItem value="1">Year 1</SelectItem>
+                  <SelectItem value="2">Year 2</SelectItem>
+                  <SelectItem value="3">Year 3</SelectItem>
+                  <SelectItem value="4">Year 4</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <label htmlFor="language" className="text-sm font-medium">Main Language/Technology</label>
+              <Input 
+                id="language"
+                name="language"
+                placeholder="e.g. React, JavaScript, Python"
+                value={newRepo.language}
+                onChange={handleInputChange}
+                className="bg-dark-400 border-white/10"
+              />
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setIsDialogOpen(false)}
+              className="bg-transparent border-white/10 hover:bg-dark-200 text-white"
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleAddRepo}
+              className="bg-gradient-blue-purple hover:opacity-90 text-white"
+              disabled={!newRepo.name || !newRepo.description || !newRepo.url || !newRepo.language}
+            >
+              Add Repository
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <DialogContent className="bg-dark-300 border-white/10 text-white">
+          <DialogHeader>
+            <DialogTitle>Delete Repository</DialogTitle>
+            <DialogDescription className="text-white/70">
+              Are you sure you want to delete this repository? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <DialogFooter className="mt-4">
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setShowDeleteConfirm(false);
+                setRepoToDelete(null);
+              }}
+              className="bg-transparent border-white/10 hover:bg-dark-200 text-white"
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={confirmDeleteRepo}
+              className="bg-red-500 hover:bg-red-600 text-white"
+            >
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </section>
   );
 };

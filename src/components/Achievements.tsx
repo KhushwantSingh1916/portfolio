@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Achievement } from '@/lib/types';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
@@ -6,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/components/ui/use-toast';
+import { Trash2 } from 'lucide-react';
 
 const initialAchievements: Achievement[] = [
   {
@@ -78,51 +78,41 @@ const Achievements: React.FC = () => {
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [password, setPassword] = useState('');
   const [passwordError, setPasswordError] = useState('');
-  
-  // New achievement form state
-  const [newAchievement, setNewAchievement] = useState<Omit<Achievement, 'id' | 'image'> & { image: string | File }>({
-    title: '',
-    description: '',
-    image: '',
-    date: new Date().toISOString().split('T')[0],
-  });
-  
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [achievementToDelete, setAchievementToDelete] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
-  // For a real app, this would be stored securely
+
   const correctPassword = "portfolio123";
-  
+
   useEffect(() => {
-    // Save achievements to localStorage when they change
     localStorage.setItem('portfolio-achievements', JSON.stringify(achievements));
   }, [achievements]);
-  
+
   const handleNext = () => {
     const maxPage = Math.ceil(achievements.length / 4) - 1;
     setCurrentPage(prev => (prev < maxPage ? prev + 1 : 0));
   };
-  
+
   const handlePrev = () => {
     const maxPage = Math.ceil(achievements.length / 4) - 1;
     setCurrentPage(prev => (prev > 0 ? prev - 1 : maxPage));
   };
-  
+
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setNewAchievement({ ...newAchievement, image: file });
     }
   };
-  
+
   const handleAddAchievement = () => {
     if (!isAuthenticated) {
       setShowPasswordModal(true);
       return;
     }
-    
+
     const id = Date.now().toString();
-    
-    // Handle file upload
+
     if (newAchievement.image instanceof File) {
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -132,10 +122,10 @@ const Achievements: React.FC = () => {
           id,
           image: imageDataUrl
         };
-        
+
         setAchievements([...achievements, achievementWithImage]);
         resetForm();
-        
+
         toast({
           title: "Achievement Added",
           description: "Your new achievement has been added successfully."
@@ -145,14 +135,44 @@ const Achievements: React.FC = () => {
     } else {
       setAchievements([...achievements, { ...newAchievement, id, image: newAchievement.image as string }]);
       resetForm();
-      
+
       toast({
         title: "Achievement Added",
         description: "Your new achievement has been added successfully."
       });
     }
   };
-  
+
+  const handleDeleteAchievement = (id: string) => {
+    if (!isAuthenticated) {
+      setShowPasswordModal(true);
+      setAchievementToDelete(id);
+      return;
+    }
+
+    setAchievementToDelete(id);
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDeleteAchievement = () => {
+    if (achievementToDelete) {
+      const updatedAchievements = achievements.filter(a => a.id !== achievementToDelete);
+      setAchievements(updatedAchievements);
+      setShowDeleteConfirm(false);
+      setAchievementToDelete(null);
+
+      const maxPage = Math.ceil(updatedAchievements.length / 4) - 1;
+      if (currentPage > maxPage && maxPage >= 0) {
+        setCurrentPage(maxPage);
+      }
+
+      toast({
+        title: "Achievement Deleted",
+        description: "The achievement has been removed successfully."
+      });
+    }
+  };
+
   const resetForm = () => {
     setNewAchievement({
       title: '',
@@ -161,18 +181,17 @@ const Achievements: React.FC = () => {
       date: new Date().toISOString().split('T')[0],
     });
     setIsDialogOpen(false);
-    
-    // Reset file input
+
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
   };
-  
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setNewAchievement({ ...newAchievement, [name]: value });
   };
-  
+
   const handlePasswordSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (password === correctPassword) {
@@ -180,30 +199,29 @@ const Achievements: React.FC = () => {
       setPasswordError('');
       setShowPasswordModal(false);
       setPassword('');
-      
-      // If we were trying to add an achievement, open that dialog
-      if (!isDialogOpen) {
+
+      if (!isDialogOpen && !achievementToDelete) {
         setIsDialogOpen(true);
+      } else if (achievementToDelete) {
+        setShowDeleteConfirm(true);
       }
     } else {
       setPasswordError('Incorrect password');
     }
   };
-  
-  // Get current page achievements
+
   const indexOfLastAchievement = (currentPage + 1) * 4;
   const indexOfFirstAchievement = indexOfLastAchievement - 4;
   const currentAchievements = achievements.slice(indexOfFirstAchievement, indexOfLastAchievement);
   const totalPages = Math.ceil(achievements.length / 4);
-  
+
   return (
     <section id="achievements" className="section-container">
       <h2 className="section-title">Achievements</h2>
-      
-      {/* Achievements card grid */}
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {currentAchievements.map((achievement) => (
-          <div key={achievement.id} className="glass-card overflow-hidden rounded-xl transition-all hover:translate-y-[-5px] hover:shadow-lg">
+          <div key={achievement.id} className="glass-card overflow-hidden rounded-xl transition-all hover:translate-y-[-5px] hover:shadow-lg group">
             <div className="relative h-48 overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-br from-purple-500/30 to-blue-500/30 backdrop-blur-sm opacity-100 transition-opacity duration-500" />
               <img 
@@ -220,6 +238,19 @@ const Achievements: React.FC = () => {
                   month: 'short'
                 })}
               </div>
+              
+              {isAuthenticated && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteAchievement(achievement.id);
+                  }}
+                  className="absolute top-3 right-3 bg-red-500/20 p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                  aria-label="Delete achievement"
+                >
+                  <Trash2 size={16} className="text-red-300" />
+                </button>
+              )}
             </div>
             
             <div className="p-5">
@@ -229,8 +260,7 @@ const Achievements: React.FC = () => {
           </div>
         ))}
       </div>
-      
-      {/* Pagination controls - centered */}
+
       <div className="flex justify-center items-center gap-4 mb-10">
         <button 
           onClick={handlePrev}
@@ -304,8 +334,7 @@ const Achievements: React.FC = () => {
           Add New Achievement
         </button>
       </div>
-      
-      {/* Password Authentication Modal */}
+
       <Dialog open={showPasswordModal} onOpenChange={setShowPasswordModal}>
         <DialogContent className="bg-dark-300 border-white/10 text-white">
           <DialogHeader>
@@ -348,8 +377,7 @@ const Achievements: React.FC = () => {
           </form>
         </DialogContent>
       </Dialog>
-      
-      {/* Add Achievement Dialog */}
+
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="bg-dark-300 border-white/10 text-white">
           <DialogHeader>
@@ -451,6 +479,36 @@ const Achievements: React.FC = () => {
               disabled={!newAchievement.title || !newAchievement.description || !newAchievement.image}
             >
               Add Achievement
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <DialogContent className="bg-dark-300 border-white/10 text-white">
+          <DialogHeader>
+            <DialogTitle>Delete Achievement</DialogTitle>
+            <DialogDescription className="text-white/70">
+              Are you sure you want to delete this achievement? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <DialogFooter className="mt-4">
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setShowDeleteConfirm(false);
+                setAchievementToDelete(null);
+              }}
+              className="bg-transparent border-white/10 hover:bg-dark-200 text-white"
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={confirmDeleteAchievement}
+              className="bg-red-500 hover:bg-red-600 text-white"
+            >
+              Delete
             </Button>
           </DialogFooter>
         </DialogContent>

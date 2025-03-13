@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { HackathonResult } from '@/lib/types';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
@@ -6,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { toast } from '@/components/ui/use-toast';
+import { Trash2 } from 'lucide-react';
 
 const initialHackathons: HackathonResult[] = [
   {
@@ -69,6 +70,8 @@ const initialHackathons: HackathonResult[] = [
 const HackathonStats: React.FC = () => {
   const [hackathons, setHackathons] = useState<HackathonResult[]>(initialHackathons);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [hackathonToDelete, setHackathonToDelete] = useState<string | null>(null);
   
   const [newHackathon, setNewHackathon] = useState<Omit<HackathonResult, 'id'>>({
     name: '',
@@ -87,6 +90,30 @@ const HackathonStats: React.FC = () => {
       description: ''
     });
     setIsDialogOpen(false);
+    
+    toast({
+      title: "Hackathon Added",
+      description: "Your hackathon result has been added successfully."
+    });
+  };
+  
+  const handleDeleteHackathon = (id: string) => {
+    setHackathonToDelete(id);
+    setShowDeleteConfirm(true);
+  };
+  
+  const confirmDeleteHackathon = () => {
+    if (hackathonToDelete) {
+      const updatedHackathons = hackathons.filter(h => h.id !== hackathonToDelete);
+      setHackathons(updatedHackathons);
+      setShowDeleteConfirm(false);
+      setHackathonToDelete(null);
+      
+      toast({
+        title: "Hackathon Deleted",
+        description: "The hackathon result has been removed successfully."
+      });
+    }
   };
   
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -99,7 +126,6 @@ const HackathonStats: React.FC = () => {
     setNewHackathon({ ...newHackathon, position });
   };
   
-  // Calculate stats
   const totalHackathons = hackathons.length;
   const firstPlaceWins = hackathons.filter(h => h.position === 1).length;
   const secondPlaceWins = hackathons.filter(h => h.position === 2).length;
@@ -107,7 +133,6 @@ const HackathonStats: React.FC = () => {
   const totalWins = firstPlaceWins + secondPlaceWins + thirdPlaceWins;
   const participationOnly = hackathons.filter(h => h.position === null).length;
   
-  // Sort hackathons by date (newest first)
   const sortedHackathons = [...hackathons].sort((a, b) => 
     new Date(b.date).getTime() - new Date(a.date).getTime()
   );
@@ -117,7 +142,6 @@ const HackathonStats: React.FC = () => {
       <h2 className="section-title">Hackathon Achievements</h2>
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
-        {/* Summary stats cards */}
         <div className="glass-card p-6 flex flex-col items-center">
           <div className="text-5xl font-bold mb-2 gradient-text">{totalHackathons}</div>
           <div className="text-lg text-white/70">Total Hackathons</div>
@@ -166,7 +190,7 @@ const HackathonStats: React.FC = () => {
           {sortedHackathons.map((hackathon) => (
             <div 
               key={hackathon.id} 
-              className="flex flex-col md:flex-row md:items-center p-4 rounded-lg bg-dark-400/50 hover:bg-dark-400 transition-colors"
+              className="flex flex-col md:flex-row md:items-center p-4 rounded-lg bg-dark-400/50 hover:bg-dark-400 transition-colors group"
             >
               <div className="flex-shrink-0 md:w-40 mb-2 md:mb-0">
                 <div className="text-sm text-white/60">
@@ -182,7 +206,7 @@ const HackathonStats: React.FC = () => {
                 <p className="text-sm text-white/70">{hackathon.description}</p>
               </div>
               
-              <div className="md:ml-4 mt-2 md:mt-0">
+              <div className="md:ml-4 mt-2 md:mt-0 flex items-center">
                 {hackathon.position ? (
                   <div 
                     className={`px-3 py-1 rounded-full text-sm font-medium inline-flex items-center ${
@@ -238,12 +262,19 @@ const HackathonStats: React.FC = () => {
                     Participated
                   </div>
                 )}
+                
+                <button
+                  onClick={() => handleDeleteHackathon(hackathon.id)}
+                  className="ml-3 bg-red-500/20 p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                  aria-label="Delete hackathon"
+                >
+                  <Trash2 size={16} className="text-red-300" />
+                </button>
               </div>
             </div>
           ))}
         </div>
         
-        {/* Win ratio visualization */}
         <div className="mt-8">
           <h3 className="text-lg font-semibold mb-4">Win Distribution</h3>
           <div className="h-8 w-full bg-dark-400 rounded-full overflow-hidden flex">
@@ -378,6 +409,36 @@ const HackathonStats: React.FC = () => {
               disabled={!newHackathon.name || !newHackathon.description}
             >
               Add Hackathon
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <DialogContent className="bg-dark-300 border-white/10 text-white">
+          <DialogHeader>
+            <DialogTitle>Delete Hackathon Result</DialogTitle>
+            <DialogDescription className="text-white/70">
+              Are you sure you want to delete this hackathon result? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <DialogFooter className="mt-4">
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setShowDeleteConfirm(false);
+                setHackathonToDelete(null);
+              }}
+              className="bg-transparent border-white/10 hover:bg-dark-200 text-white"
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={confirmDeleteHackathon}
+              className="bg-red-500 hover:bg-red-600 text-white"
+            >
+              Delete
             </Button>
           </DialogFooter>
         </DialogContent>
