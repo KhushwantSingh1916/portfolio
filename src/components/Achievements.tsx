@@ -35,6 +35,34 @@ const initialAchievements: Achievement[] = [
     description: 'Invited to speak at a major tech conference about modern web development practices and emerging technologies.',
     image: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?q=80&w=1000&auto=format&fit=crop',
     date: '2023-09-05',
+  },
+  {
+    id: '5',
+    title: 'Industry Recognition Award',
+    description: 'Recognized by industry leaders for contributions to innovative technology solutions and community engagement.',
+    image: 'https://images.unsplash.com/photo-1496128858413-b36217c2ce36?q=80&w=1000&auto=format&fit=crop',
+    date: '2023-11-15',
+  },
+  {
+    id: '6',
+    title: 'Published Research Paper',
+    description: 'Co-authored a research paper on advanced web technologies that was published in a prestigious technical journal.',
+    image: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?q=80&w=1000&auto=format&fit=crop',
+    date: '2024-01-22',
+  },
+  {
+    id: '7',
+    title: 'Mentorship Program Leader',
+    description: 'Led a mentorship program helping junior developers improve their skills and advance their careers in tech.',
+    image: 'https://images.unsplash.com/photo-1507537297725-24a1c029d3ca?q=80&w=1000&auto=format&fit=crop',
+    date: '2024-03-10',
+  },
+  {
+    id: '8',
+    title: 'Technology Innovation Prize',
+    description: 'Received an innovation prize for developing a novel approach to solving complex programming challenges.',
+    image: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?q=80&w=1000&auto=format&fit=crop',
+    date: '2024-05-05',
   }
 ];
 
@@ -43,14 +71,13 @@ const Achievements: React.FC = () => {
     const saved = localStorage.getItem('portfolio-achievements');
     return saved ? JSON.parse(saved) : initialAchievements;
   });
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [currentPage, setCurrentPage] = useState(0);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isImageLoaded, setIsImageLoaded] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [password, setPassword] = useState('');
   const [passwordError, setPasswordError] = useState('');
-  const [animating, setAnimating] = useState(false);
   
   // New achievement form state
   const [newAchievement, setNewAchievement] = useState<Omit<Achievement, 'id' | 'image'> & { image: string | File }>({
@@ -60,9 +87,7 @@ const Achievements: React.FC = () => {
     date: new Date().toISOString().split('T')[0],
   });
   
-  const imageRef = useRef<HTMLImageElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const achievementsContainerRef = useRef<HTMLDivElement>(null);
   
   // For a real app, this would be stored securely
   const correctPassword = "portfolio123";
@@ -73,23 +98,13 @@ const Achievements: React.FC = () => {
   }, [achievements]);
   
   const handleNext = () => {
-    if (animating) return;
-    setAnimating(true);
-    setIsImageLoaded(false);
-    setTimeout(() => {
-      setCurrentIndex((prevIndex) => (prevIndex + 1) % achievements.length);
-      setAnimating(false);
-    }, 300);
+    const maxPage = Math.ceil(achievements.length / 4) - 1;
+    setCurrentPage(prev => (prev < maxPage ? prev + 1 : 0));
   };
   
   const handlePrev = () => {
-    if (animating) return;
-    setAnimating(true);
-    setIsImageLoaded(false);
-    setTimeout(() => {
-      setCurrentIndex((prevIndex) => (prevIndex - 1 + achievements.length) % achievements.length);
-      setAnimating(false);
-    }, 300);
+    const maxPage = Math.ceil(achievements.length / 4) - 1;
+    setCurrentPage(prev => (prev > 0 ? prev - 1 : maxPage));
   };
   
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -175,198 +190,94 @@ const Achievements: React.FC = () => {
     }
   };
   
-  const currentAchievement = achievements[currentIndex];
-  
-  const handleImageLoad = () => {
-    setIsImageLoaded(true);
-  };
-  
-  // Improved 3D carousel effect for side achievements
-  useEffect(() => {
-    const updateAchievementPositions = () => {
-      if (!achievementsContainerRef.current) return;
-      
-      const items = Array.from(achievementsContainerRef.current.children);
-      const totalItems = items.length;
-      
-      items.forEach((item, index) => {
-        const element = item as HTMLElement;
-        
-        // Calculate the position relative to the current index
-        let position = index - currentIndex;
-        
-        // Handle wrapping for circular carousel
-        if (position < -Math.floor(totalItems / 2)) position += totalItems;
-        if (position > Math.floor(totalItems / 2)) position -= totalItems;
-        
-        // Apply different transforms based on position
-        if (position === 0) {
-          // Current item - center position
-          element.style.transform = 'translateX(0) scale(1)';
-          element.style.zIndex = '30';
-          element.style.opacity = '1';
-          element.style.filter = 'brightness(1)';
-        } else if (position < 0) {
-          // Items to the left
-          const x = -25 - (Math.abs(position) - 1) * 10;
-          const scale = 0.85 - Math.abs(position) * 0.1;
-          const zIndex = 20 - Math.abs(position);
-          const opacity = 0.8 - Math.abs(position) * 0.2;
-          
-          element.style.transform = `translateX(${x}%) scale(${scale})`;
-          element.style.zIndex = zIndex.toString();
-          element.style.opacity = opacity.toString();
-          element.style.filter = 'brightness(0.7)';
-        } else {
-          // Items to the right
-          const x = 25 + (position - 1) * 10;
-          const scale = 0.85 - position * 0.1;
-          const zIndex = 20 - position;
-          const opacity = 0.8 - position * 0.2;
-          
-          element.style.transform = `translateX(${x}%) scale(${scale})`;
-          element.style.zIndex = zIndex.toString();
-          element.style.opacity = opacity.toString();
-          element.style.filter = 'brightness(0.7)';
-        }
-      });
-    };
-    
-    updateAchievementPositions();
-  }, [currentIndex, achievements.length]);
+  // Get current page achievements
+  const indexOfLastAchievement = (currentPage + 1) * 4;
+  const indexOfFirstAchievement = indexOfLastAchievement - 4;
+  const currentAchievements = achievements.slice(indexOfFirstAchievement, indexOfLastAchievement);
+  const totalPages = Math.ceil(achievements.length / 4);
   
   return (
     <section id="achievements" className="section-container">
       <h2 className="section-title">Achievements</h2>
       
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12 items-center">
-        {/* Improved 3D Carousel for Achievements */}
-        <div className="relative h-[400px] w-full perspective-1000 overflow-hidden">
-          <div 
-            ref={achievementsContainerRef}
-            className="w-full h-full flex items-center justify-center"
-          >
-            {achievements.map((achievement, index) => (
-              <div 
-                key={achievement.id} 
-                className={`absolute transition-all duration-500 w-full max-w-md hover:cursor-pointer ${animating ? 'opacity-0' : ''}`}
-                onClick={() => setCurrentIndex(index)}
-                style={{
-                  transformStyle: 'preserve-3d',
-                  transformOrigin: 'center center',
-                  transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
-                }}
-              >
-                <div className="relative w-full h-64 overflow-hidden rounded-xl shadow-2xl">
-                  <div 
-                    className={`absolute inset-0 bg-gradient-to-br from-purple-500/30 to-blue-500/30 backdrop-blur-sm ${
-                      index === currentIndex && isImageLoaded ? 'opacity-0' : 'opacity-100'
-                    } transition-opacity duration-500`}
-                  />
-                  <img 
-                    src={achievement.image}
-                    alt={achievement.title}
-                    className={`w-full h-full object-cover transition-all duration-500 ${
-                      index === currentIndex ? 'scale-105' : 'scale-100'
-                    }`}
-                    onLoad={index === currentIndex ? handleImageLoad : undefined}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-dark-500/90 via-dark-500/20 to-transparent"></div>
-                  
-                  {/* Show title on the image for non-active items */}
-                  {index !== currentIndex && (
-                    <div className="absolute bottom-4 left-4 right-4 text-white">
-                      <h4 className="text-lg font-bold">{achievement.title}</h4>
-                    </div>
-                  )}
-                </div>
+      {/* Achievements card grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {currentAchievements.map((achievement) => (
+          <div key={achievement.id} className="glass-card overflow-hidden rounded-xl transition-all hover:translate-y-[-5px] hover:shadow-lg">
+            <div className="relative h-48 overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-purple-500/30 to-blue-500/30 backdrop-blur-sm opacity-100 transition-opacity duration-500" />
+              <img 
+                src={achievement.image}
+                alt={achievement.title}
+                className="w-full h-full object-cover transition-all duration-500 scale-105"
+                onLoad={() => setIsImageLoaded(true)}
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-dark-500/90 via-dark-500/20 to-transparent"></div>
+              
+              <div className="absolute top-3 left-3 bg-gradient-blue-purple text-white px-3 py-1 rounded-full inline-block text-sm">
+                {new Date(achievement.date).toLocaleDateString('en-US', { 
+                  year: 'numeric',
+                  month: 'short'
+                })}
               </div>
-            ))}
-          </div>
-        </div>
-        
-        <div className="space-y-6">
-          <div className={`transition-opacity duration-300 ${animating ? 'opacity-0' : 'opacity-100'}`}>
-            <div className="bg-gradient-blue-purple text-white px-3 py-1 rounded-full inline-block text-sm mb-2">
-              {new Date(currentAchievement.date).toLocaleDateString('en-US', { 
-                year: 'numeric',
-                month: 'short'
-              })}
-            </div>
-            <h3 className="text-2xl md:text-3xl font-bold mb-3 gradient-text">{currentAchievement.title}</h3>
-            <p className="text-white/70 leading-relaxed">{currentAchievement.description}</p>
-          </div>
-          
-          <div className="flex items-center justify-between pt-4">
-            <div className="flex space-x-2">
-              {achievements.map((_, index) => (
-                <button 
-                  key={index}
-                  onClick={() => {
-                    if (!animating) {
-                      setAnimating(true);
-                      setIsImageLoaded(false);
-                      setTimeout(() => {
-                        setCurrentIndex(index);
-                        setAnimating(false);
-                      }, 300);
-                    }
-                  }}
-                  className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
-                    index === currentIndex 
-                      ? 'bg-gradient-blue-purple w-8' 
-                      : 'bg-white/20 hover:bg-white/40'
-                  }`}
-                  aria-label={`Go to achievement ${index + 1}`}
-                />
-              ))}
             </div>
             
-            <div className="flex space-x-3">
-              <button 
-                onClick={handlePrev}
-                className="bg-dark-300 hover:bg-dark-200 p-2 rounded-full transition-all shadow-lg"
-                aria-label="Previous achievement"
-              >
-                <svg 
-                  xmlns="http://www.w3.org/2000/svg" 
-                  width="20" 
-                  height="20" 
-                  viewBox="0 0 24 24" 
-                  fill="none" 
-                  stroke="currentColor" 
-                  strokeWidth="2" 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round"
-                >
-                  <path d="m15 18-6-6 6-6"/>
-                </svg>
-              </button>
-              <button 
-                onClick={handleNext}
-                className="bg-dark-300 hover:bg-dark-200 p-2 rounded-full transition-all shadow-lg"
-                aria-label="Next achievement"
-              >
-                <svg 
-                  xmlns="http://www.w3.org/2000/svg" 
-                  width="20" 
-                  height="20" 
-                  viewBox="0 0 24 24" 
-                  fill="none" 
-                  stroke="currentColor" 
-                  strokeWidth="2" 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round"
-                >
-                  <path d="m9 18 6-6-6-6"/>
-                </svg>
-              </button>
+            <div className="p-5">
+              <h3 className="text-xl font-bold mb-2 gradient-text line-clamp-1">{achievement.title}</h3>
+              <p className="text-white/70 line-clamp-3">{achievement.description}</p>
             </div>
           </div>
-        </div>
+        ))}
       </div>
       
-      <div className="mt-12 flex justify-center">
+      {/* Pagination controls - centered */}
+      <div className="flex justify-center items-center gap-4 mb-10">
+        <button 
+          onClick={handlePrev}
+          className="bg-dark-300 hover:bg-dark-200 p-2 rounded-full transition-all shadow-lg"
+          aria-label="Previous achievements"
+        >
+          <svg 
+            xmlns="http://www.w3.org/2000/svg" 
+            width="20" 
+            height="20" 
+            viewBox="0 0 24 24" 
+            fill="none" 
+            stroke="currentColor" 
+            strokeWidth="2" 
+            strokeLinecap="round" 
+            strokeLinejoin="round"
+          >
+            <path d="m15 18-6-6 6-6"/>
+          </svg>
+        </button>
+        
+        <div className="text-white/70">
+          Page {currentPage + 1} of {totalPages}
+        </div>
+        
+        <button 
+          onClick={handleNext}
+          className="bg-dark-300 hover:bg-dark-200 p-2 rounded-full transition-all shadow-lg"
+          aria-label="Next achievements"
+        >
+          <svg 
+            xmlns="http://www.w3.org/2000/svg" 
+            width="20" 
+            height="20" 
+            viewBox="0 0 24 24" 
+            fill="none" 
+            stroke="currentColor" 
+            strokeWidth="2" 
+            strokeLinecap="round" 
+            strokeLinejoin="round"
+          >
+            <path d="m9 18 6-6-6-6"/>
+          </svg>
+        </button>
+      </div>
+      
+      <div className="flex justify-center">
         <button 
           onClick={() => {
             if (isAuthenticated) {

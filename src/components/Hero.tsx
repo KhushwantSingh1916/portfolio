@@ -10,7 +10,7 @@ const Hero: React.FC = () => {
   const isMobile = useIsMobile();
   const textRef = useRef<HTMLHeadingElement>(null);
   const [imagesLoaded, setImagesLoaded] = useState(0);
-  const totalImages = 3; // Changed to 3 photos only
+  const totalImages = 3; // Three photos only
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
@@ -127,7 +127,7 @@ const Hero: React.FC = () => {
           I craft elegant solutions to complex problems through clean code and intuitive interfaces. Specializing in full-stack development with a passion for creating seamless user experiences.
         </p>
         
-        {/* Improved Developer Photos Gallery - Now with 3 photos */}
+        {/* Improved Developer Photos Gallery - Three photos */}
         <div className="relative h-80 max-w-3xl mx-auto my-12 animate-fade-in opacity-0" style={{ animationDelay: '1.5s', animationFillMode: 'forwards' }}>
           <div className="perspective-1000 w-full h-full flex items-center justify-center">
             <div className="relative w-full h-full flex justify-center items-center">
@@ -221,23 +221,7 @@ const Hero: React.FC = () => {
           </a>
         </div>
         
-        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 animate-bounce">
-          <svg 
-            xmlns="http://www.w3.org/2000/svg" 
-            width="24" 
-            height="24" 
-            viewBox="0 0 24 24" 
-            fill="none" 
-            stroke="currentColor" 
-            strokeWidth="2" 
-            strokeLinecap="round" 
-            strokeLinejoin="round" 
-            className="text-white/50"
-          >
-            <path d="M12 5v14"></path>
-            <path d="m19 12-7 7-7-7"></path>
-          </svg>
-        </div>
+        {/* Remove the scroll arrow */}
       </div>
 
       {/* Password Authentication Modal */}
