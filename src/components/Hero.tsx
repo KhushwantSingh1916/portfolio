@@ -19,8 +19,8 @@ const Hero: React.FC = () => {
   
   // Images state with localStorage persistence
   const [heroImages, setHeroImages] = useState<string[]>(() => {
-    const savedImages = localStorage.getItem('hero-images');
-    return savedImages ? JSON.parse(savedImages) : [
+    const saved = localStorage.getItem('hero-images');
+    return saved ? JSON.parse(savedImages) : [
       "https://images.unsplash.com/photo-1568602471122-7832951cc4c5?q=80&w=1000&auto=format&fit=crop",
       "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=1000&auto=format&fit=crop",
       "https://images.unsplash.com/photo-1531297484001-80022131f5a1?q=80&w=1000&auto=format&fit=crop"
@@ -45,8 +45,8 @@ const Hero: React.FC = () => {
       const span = document.createElement('span');
       span.innerText = char;
       span.style.animationDelay = `${index * 0.05}s`;
-      span.className = 'inline-block opacity-0 animate-fade-in';
-      span.style.animationFillMode = 'forwards'; // Keep visible after animation
+      span.className = 'inline-block opacity-0 animate-fade-in text-white';
+      span.style.animationFillMode = 'forwards';
       textElement.appendChild(span);
     });
   }, []);
@@ -115,7 +115,7 @@ const Hero: React.FC = () => {
           </div>
           <h1 
             ref={textRef}
-            className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight gradient-text"
+            className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight text-white"
           ></h1>
           <div className="h-1 w-24 bg-gradient-blue-purple rounded-full mt-6 animate-fade-in opacity-0" style={{ animationDelay: '1s', animationFillMode: 'forwards' }}></div>
         </div>
@@ -124,11 +124,9 @@ const Hero: React.FC = () => {
           I craft elegant solutions to complex problems through clean code and intuitive interfaces. Specializing in full-stack development with a passion for creating seamless user experiences.
         </p>
         
-        {/* Improved Developer Photos Gallery - Three photos */}
         <div className="relative h-80 max-w-3xl mx-auto my-12 animate-fade-in opacity-0" style={{ animationDelay: '1.5s', animationFillMode: 'forwards' }}>
           <div className="perspective-1000 w-full h-full flex items-center justify-center">
             <div className="relative w-full h-full flex justify-center items-center">
-              {/* Main image - centered and larger */}
               <div 
                 className="absolute z-30 w-52 h-64 transition-all duration-500 hover:scale-105 cursor-pointer"
                 style={{ transformStyle: 'preserve-3d' }}
@@ -152,7 +150,6 @@ const Hero: React.FC = () => {
                 </div>
               </div>
               
-              {/* Left image */}
               <div 
                 className="absolute left-10 z-20 w-40 h-48 -rotate-12 transition-all duration-500 hover:rotate-0 hover:z-40 hover:scale-110 cursor-pointer"
                 style={{ transformStyle: 'preserve-3d' }}
@@ -176,7 +173,6 @@ const Hero: React.FC = () => {
                 </div>
               </div>
               
-              {/* Right image */}
               <div 
                 className="absolute right-10 z-20 w-40 h-48 rotate-12 transition-all duration-500 hover:rotate-0 hover:z-40 hover:scale-110 cursor-pointer"
                 style={{ transformStyle: 'preserve-3d' }}
@@ -219,7 +215,6 @@ const Hero: React.FC = () => {
         </div>
       </div>
 
-      {/* Password Authentication Modal */}
       <Dialog open={showPasswordModal} onOpenChange={setShowPasswordModal}>
         <DialogContent className="bg-dark-300 border-white/10 text-white">
           <DialogHeader>
@@ -266,7 +261,6 @@ const Hero: React.FC = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Image Upload Dialog */}
       <Dialog open={showImageUploadDialog} onOpenChange={(open) => {
         setShowImageUploadDialog(open);
         if (!open) setSelectedImageIndex(null);

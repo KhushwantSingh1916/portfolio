@@ -252,18 +252,16 @@ const Achievements: React.FC = () => {
                 })}
               </div>
               
-              {isAuthenticated && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDeleteAchievement(achievement.id);
-                  }}
-                  className="absolute top-3 right-3 bg-red-500/20 p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                  aria-label="Delete achievement"
-                >
-                  <Trash2 size={16} className="text-red-300" />
-                </button>
-              )}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDeleteAchievement(achievement.id);
+                }}
+                className="absolute top-3 right-3 bg-red-500/70 hover:bg-red-500/90 p-2 rounded-full transition-colors"
+                aria-label="Delete achievement"
+              >
+                <Trash2 size={16} className="text-white" />
+              </button>
             </div>
             
             <div className="p-5">
@@ -531,4 +529,3 @@ const Achievements: React.FC = () => {
 };
 
 export default Achievements;
-
