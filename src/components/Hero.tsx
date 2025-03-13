@@ -220,8 +220,6 @@ const Hero: React.FC = () => {
             Get in Touch
           </a>
         </div>
-        
-        {/* Remove the scroll arrow */}
       </div>
 
       {/* Password Authentication Modal */}
