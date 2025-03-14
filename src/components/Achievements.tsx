@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Achievement } from '@/lib/types';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
@@ -5,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/components/ui/use-toast';
-import { Trash2 } from 'lucide-react';
+import { Trash2, Maximize, X } from 'lucide-react';
 
 const initialAchievements: Achievement[] = [
   {
@@ -93,6 +94,7 @@ const Achievements: React.FC = () => {
   const [passwordError, setPasswordError] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [achievementToDelete, setAchievementToDelete] = useState<string | null>(null);
+  const [expandedAchievement, setExpandedAchievement] = useState<Achievement | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const correctPassword = "portfolio123";
@@ -223,6 +225,10 @@ const Achievements: React.FC = () => {
     }
   };
 
+  const handleExpandAchievement = (achievement: Achievement) => {
+    setExpandedAchievement(achievement);
+  };
+
   const indexOfLastAchievement = (currentPage + 1) * 4;
   const indexOfFirstAchievement = indexOfLastAchievement - 4;
   const currentAchievements = achievements.slice(indexOfFirstAchievement, indexOfLastAchievement);
@@ -234,7 +240,11 @@ const Achievements: React.FC = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {currentAchievements.map((achievement) => (
-          <div key={achievement.id} className="glass-card overflow-hidden rounded-xl transition-all hover:translate-y-[-5px] hover:shadow-lg group">
+          <div 
+            key={achievement.id} 
+            className="glass-card overflow-hidden rounded-xl transition-all hover:translate-y-[-5px] hover:shadow-lg group cursor-pointer" 
+            onClick={() => handleExpandAchievement(achievement)}
+          >
             <div className="relative h-48 overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-br from-purple-500/30 to-blue-500/30 backdrop-blur-sm opacity-100 transition-opacity duration-500" />
               <img 
@@ -261,6 +271,17 @@ const Achievements: React.FC = () => {
                 aria-label="Delete achievement"
               >
                 <Trash2 size={16} className="text-white" />
+              </button>
+
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleExpandAchievement(achievement);
+                }}
+                className="absolute bottom-3 right-3 bg-dark-300/70 hover:bg-dark-200/90 p-2 rounded-full transition-colors opacity-0 group-hover:opacity-100"
+                aria-label="Maximize achievement"
+              >
+                <Maximize size={16} className="text-white" />
               </button>
             </div>
             
@@ -345,6 +366,71 @@ const Achievements: React.FC = () => {
           Add New Achievement
         </button>
       </div>
+
+      {/* Expanded achievement view */}
+      <Dialog open={!!expandedAchievement} onOpenChange={(open) => !open && setExpandedAchievement(null)}>
+        <DialogContent className="bg-dark-300/95 border-white/10 text-white max-w-4xl p-0 overflow-hidden">
+          <button 
+            className="absolute right-4 top-4 z-10 bg-dark-300/80 p-2 rounded-full hover:bg-dark-200"
+            onClick={() => setExpandedAchievement(null)}
+          >
+            <X className="h-4 w-4" />
+          </button>
+
+          {expandedAchievement && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-0">
+              <div className="h-full">
+                <div className="relative h-full">
+                  <img 
+                    src={expandedAchievement.image}
+                    alt={expandedAchievement.title}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-dark-500 to-transparent p-4 md:hidden">
+                    <h2 className="text-xl font-bold gradient-text">
+                      {expandedAchievement.title}
+                    </h2>
+                    <div className="text-white/70 text-sm">
+                      {new Date(expandedAchievement.date).toLocaleDateString('en-US', { 
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="p-6 flex flex-col justify-between">
+                <div>
+                  <div className="hidden md:block mb-4">
+                    <h2 className="text-2xl font-bold gradient-text mb-2">
+                      {expandedAchievement.title}
+                    </h2>
+                    <div className="text-white/70 text-sm">
+                      {new Date(expandedAchievement.date).toLocaleDateString('en-US', { 
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                      })}
+                    </div>
+                  </div>
+                  <div className="md:max-h-[50vh] md:overflow-y-auto pr-2 custom-scrollbar">
+                    <p className="text-white/90 whitespace-pre-line">{expandedAchievement.description}</p>
+                  </div>
+                </div>
+                <div className="mt-6 flex justify-end">
+                  <Button
+                    onClick={() => setExpandedAchievement(null)}
+                    className="bg-gradient-blue-purple hover:opacity-90"
+                  >
+                    Close
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={showPasswordModal} onOpenChange={setShowPasswordModal}>
         <DialogContent className="bg-dark-300 border-white/10 text-white">

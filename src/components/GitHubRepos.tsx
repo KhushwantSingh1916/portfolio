@@ -93,6 +93,10 @@ const GitHubRepos: React.FC = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [repoToDelete, setRepoToDelete] = useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [password, setPassword] = useState('');
+  const [passwordError, setPasswordError] = useState('');
   
   // New repo form state
   const [newRepo, setNewRepo] = useState<Omit<Repository, 'id'>>({
@@ -102,6 +106,8 @@ const GitHubRepos: React.FC = () => {
     year: 1,
     language: ''
   });
+  
+  const correctPassword = "portfolio123";
   
   React.useEffect(() => {
     localStorage.setItem('github-repos', JSON.stringify(repos));
@@ -155,6 +161,12 @@ const GitHubRepos: React.FC = () => {
   };
   
   const handleDeleteRepo = (id: string) => {
+    if (!isAuthenticated) {
+      setRepoToDelete(id);
+      setShowPasswordModal(true);
+      return;
+    }
+    
     setRepoToDelete(id);
     setShowDeleteConfirm(true);
   };
@@ -170,6 +182,24 @@ const GitHubRepos: React.FC = () => {
         title: "Repository Deleted",
         description: "The GitHub repository has been removed successfully."
       });
+    }
+  };
+  
+  const handlePasswordSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (password === correctPassword) {
+      setIsAuthenticated(true);
+      setPasswordError('');
+      setShowPasswordModal(false);
+      setPassword('');
+
+      if (repoToDelete) {
+        setShowDeleteConfirm(true);
+      } else {
+        setIsDialogOpen(true);
+      }
+    } else {
+      setPasswordError('Incorrect password');
     }
   };
   
@@ -269,8 +299,13 @@ const GitHubRepos: React.FC = () => {
             <div className="flex justify-center mt-8">
               <button
                 onClick={() => {
-                  setNewRepo({ ...newRepo, year: year as Year });
-                  setIsDialogOpen(true);
+                  if (isAuthenticated) {
+                    setNewRepo({ ...newRepo, year: year as Year });
+                    setIsDialogOpen(true);
+                  } else {
+                    setNewRepo({ ...newRepo, year: year as Year });
+                    setShowPasswordModal(true);
+                  }
                 }}
                 className="flex items-center gap-2 bg-dark-300 border border-white/10 px-5 py-2 rounded-lg hover:bg-dark-200 transition-all"
               >
@@ -306,6 +341,50 @@ const GitHubRepos: React.FC = () => {
           View All Repositories
         </a>
       </div>
+      
+      {/* Authentication Dialog */}
+      <Dialog open={showPasswordModal} onOpenChange={setShowPasswordModal}>
+        <DialogContent className="bg-dark-300 border-white/10 text-white">
+          <DialogHeader>
+            <DialogTitle>Authentication Required</DialogTitle>
+            <DialogDescription className="text-white/70">
+              Enter admin password to add or edit content.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <form onSubmit={handlePasswordSubmit} className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label htmlFor="admin-password" className="text-sm font-medium">Password</label>
+              <Input 
+                id="admin-password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="bg-dark-400 border-white/10"
+                placeholder="Enter admin password"
+              />
+              {passwordError && <p className="text-red-500 text-sm">{passwordError}</p>}
+            </div>
+            
+            <DialogFooter>
+              <Button 
+                variant="outline" 
+                onClick={() => setShowPasswordModal(false)}
+                className="bg-transparent border-white/10 hover:bg-dark-200 text-white"
+                type="button"
+              >
+                Cancel
+              </Button>
+              <Button 
+                type="submit"
+                className="bg-gradient-blue-purple hover:opacity-90 text-white"
+              >
+                Login
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
       
       {/* Add Repository Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
